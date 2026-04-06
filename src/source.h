@@ -7,6 +7,9 @@
   #include <windows.h>
 #else
   #include <dlfcn.h>
+#ifdef SYS_MACOSX
+#include <mach-o/dyld.h>
+#endif
   #include <limits.h>
 
   #define LoadLibrary(x) dlopen(x, RTLD_NOW | RTLD_LOCAL)
@@ -270,6 +273,9 @@ public:
 #include <avisynth.h>
 #include <stdio.h>
 #include <dlfcn.h>
+#ifdef SYS_MACOSX
+#include <mach-o/dyld.h>
+#endif
 
 const AVS_Linkage *AVS_linkage = nullptr;
 
@@ -293,10 +299,42 @@ public:
     int tff = 0;
     if (env) env->DeleteScriptEnvironment();
   
+#ifdef SYS_MACOSX
+    /* 候補パスを順に試みる */
+    const char *_avs_cands[] = {
+      "libavisynth.dylib", "libavisynth.12.dylib",
+      "/usr/local/lib/libavisynth.dylib", "/usr/local/lib/libavisynth.12.dylib",
+      "/opt/homebrew/lib/libavisynth.dylib", "/opt/homebrew/lib/libavisynth.12.dylib",
+      NULL };
+    void *handle = NULL;
+    for (int _ci = 0; _avs_cands[_ci] && !handle; _ci++)
+      handle = dlopen(_avs_cands[_ci], RTLD_LAZY);
+    if (handle == NULL) {
+      /* 実行ファイルと同じディレクトリ（exe_files/）を探す */
+      char _exe_path[4096];
+      uint32_t _exe_size = sizeof(_exe_path);
+      if (_NSGetExecutablePath(_exe_path, &_exe_size) == 0) {
+        char *_slash = strrchr(_exe_path, '/');
+        if (_slash) {
+          const char *_libname = "libavisynth.dylib";
+          size_t _dir_len = (size_t)(_slash - _exe_path + 1);
+          if (_dir_len + strlen(_libname) < sizeof(_exe_path)) {
+            memcpy(_exe_path + _dir_len, _libname, strlen(_libname) + 1);
+            handle = dlopen(_exe_path, RTLD_LAZY);
+          }
+        }
+      }
+    }
+    if (handle == NULL) {
+      fprintf(stdout, "Cannot load libavisynth.dylib\r\n");
+      throw "error: failed to load libavisynth.dylib";
+    }
+#else
     void *handle = dlopen("libavisynth.so", RTLD_LAZY);
     if (handle == NULL) {
       fprintf(stdout, "Cannot load libavisynth.so\r\n");
     }
+#endif
   
     typedef IScriptEnvironment * (* func_t)(int);
     void *mkr = dlsym(handle, "CreateScriptEnvironment");
@@ -342,10 +380,12 @@ public:
       
       if(inf.IsPlanar()==false){
         fprintf(stderr, "converting input clip to Y420\n");
-        //char *arg_name[2] = {NULL, "interlaced"};
-        //AVSValue arg_arr[2] = {res, bool(interlaced)};
-        //AVSValue tmp = env->Invoke("ConvertToY420", (arg_arr, 2), arg_name);
-        throw "error: input file isn't Y420";
+        const char *cty_arg_name[2] = {NULL, "interlaced"};
+        AVSValue cty_arg_arr[2] = {res, AVSValue(interlaced != 0)};
+        AVSValue cty_tmp = env->Invoke("ConvertToYV12", AVSValue(cty_arg_arr, 2), cty_arg_name);
+        res = cty_tmp;
+        clip = res.AsClip();
+        inf = clip->GetVideoInfo();
       }
   
       if(inf.num_audio_samples > 0 && inf.BytesPerChannelSample() !=2){

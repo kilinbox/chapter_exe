@@ -8,13 +8,16 @@
 #ifndef _WIN32
 #define sprintf_s sprintf
 #define _stricmp  strcasecmp
-#include <malloc.h>
+#include <stdlib.h>
 int fopen_s(FILE **fp,const char *s,const char *m)
 {
 *fp = fopen(s,m);
 return *fp == NULL;
 }
-#define _aligned_malloc(a,b) memalign(b,a)
+static inline void* _memalign_compat(size_t size, size_t align) {
+    void* ptr = NULL; posix_memalign(&ptr, align, size); return ptr;
+}
+#define _aligned_malloc(a,b) _memalign_compat(a,b)
 #define _aligned_free free
 #endif
 
@@ -66,7 +69,7 @@ int main(int argc, const char* argv[])
 
 	printf("chapter.auf pre loading program.\n");
 	printf("usage:\n");
-	printf("\tchapter_exe.exe -v input_avs -o output_txt\n");
+	printf("\tchapter_exe -v input_avs -o output_txt\n");
 	printf("params:\n\t-v 入力画像ファイル\n\t-a 入力音声ファイル（省略時は動画と同じファイル）\n\t-m 無音判定閾値（1〜2^15)\n\t-s 最低無音フレーム数\n\t-b 無音シーン検索間隔数\n");
 	printf("\t-e 無音前後検索拡張フレーム数\n");
 

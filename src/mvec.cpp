@@ -689,79 +689,54 @@ int full_search(unsigned char* current_pix,	//現フレームの輝度。8ビッ
 //		フレーム間絶対値差合計関数
 //---------------------------------------------------------------------
 //bbMPEGのソースを流用
+#if defined(__x86_64__) || defined(__i386__)
 #include <emmintrin.h>
+#endif
 
 int dist( unsigned char *p1, unsigned char *p2, int lx, int distlim, int block_height )
 {
-	if (block_height == 8) {
-		__m128i a, b, r;
-
-		a = _mm_load_si128 ((__m128i*)p1 +  0);
-		b = _mm_loadu_si128((__m128i*)p2 +  0);
-		r = _mm_sad_epu8(a, b);
-
-		a = _mm_load_si128 ((__m128i*)(p1 + lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 2*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 2*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 3*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 3*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 4*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 4*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 5*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 5*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 6*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 6*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-
-		a = _mm_load_si128 ((__m128i*)(p1 + 7*lx));
-		b = _mm_loadu_si128((__m128i*)(p2 + 7*lx));
-		r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-		return _mm_extract_epi16(r, 0) + _mm_extract_epi16(r, 4);;
-	}
-
-	int s = 0;
-	for(int i=0;i<block_height;i++)
-	{
-		/*
-		s += motion_lookup[p1[0]][p2[0]];
-		s += motion_lookup[p1[1]][p2[1]];
-		s += motion_lookup[p1[2]][p2[2]];
-		s += motion_lookup[p1[3]][p2[3]];
-		s += motion_lookup[p1[4]][p2[4]];
-		s += motion_lookup[p1[5]][p2[5]];
-		s += motion_lookup[p1[6]][p2[6]];
-		s += motion_lookup[p1[7]][p2[7]];
-		s += motion_lookup[p1[8]][p2[8]];
-		s += motion_lookup[p1[9]][p2[9]];
-		s += motion_lookup[p1[10]][p2[10]];
-		s += motion_lookup[p1[11]][p2[11]];
-		s += motion_lookup[p1[12]][p2[12]];
-		s += motion_lookup[p1[13]][p2[13]];
-		s += motion_lookup[p1[14]][p2[14]];
-		s += motion_lookup[p1[15]][p2[15]];*/
-
-		__m128i a = _mm_load_si128((__m128i*)p1);
-		__m128i b = _mm_loadu_si128((__m128i*)p2);
-		__m128i r = _mm_sad_epu8(a, b);
-		s += _mm_extract_epi16(r, 0) + _mm_extract_epi16(r, 4);
-
-		if (s > distlim)	break;
-
-		p1 += lx;
-		p2 += lx;
-	}
-	return s;
+#if defined(__x86_64__) || defined(__i386__)
+if (block_height == 8) {
+__m128i a, b, r;
+a = _mm_load_si128 ((__m128i*)p1 +  0); b = _mm_loadu_si128((__m128i*)p2 +  0); r = _mm_sad_epu8(a, b);
+a = _mm_load_si128 ((__m128i*)(p1 + lx)); b = _mm_loadu_si128((__m128i*)(p2 + lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 2*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 2*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 3*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 3*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 4*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 4*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 5*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 5*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 6*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 6*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+a = _mm_load_si128 ((__m128i*)(p1 + 7*lx)); b = _mm_loadu_si128((__m128i*)(p2 + 7*lx)); r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+return _mm_extract_epi16(r, 0) + _mm_extract_epi16(r, 4);
+}
+int s = 0;
+for(int i=0;i<block_height;i++) {
+__m128i a = _mm_load_si128((__m128i*)p1);
+__m128i b = _mm_loadu_si128((__m128i*)p2);
+__m128i r = _mm_sad_epu8(a, b);
+s += _mm_extract_epi16(r, 0) + _mm_extract_epi16(r, 4);
+if (s > distlim) break;
+p1 += lx; p2 += lx;
+}
+return s;
+#else
+// ARM64向けスカラー実装（SAD: Sum of Absolute Differences）
+if (block_height == 8) {
+    int s = 0;
+    for (int i = 0; i < 8; i++) {
+        for (int j = 0; j < 16; j++)
+            s += abs((int)p1[i*lx+j] - (int)p2[i*lx+j]);
+    }
+    return s;
+}
+int s = 0;
+for (int i = 0; i < block_height; i++) {
+    for (int j = 0; j < 16; j++)
+        s += abs((int)p1[j] - (int)p2[j]);
+    if (s > distlim) break;
+    p1 += lx; p2 += lx;
+}
+return s;
+#endif
 }
 
 
@@ -787,53 +762,29 @@ block_heightに16が代入されていたらば、lxには画像の横幅の二�
 //---------------------------------------------------------------------
 int maxmin_block( unsigned char *p, int lx, int block_height )
 {
-	__m128i rmin, rmax, a, b, z;
-
-	// 各列の最大・最小を求める
-	rmin = _mm_load_si128((__m128i*)p);
-	rmax = _mm_load_si128((__m128i*)p);
-	p += lx;
-	for(int i=1; i<block_height; i++){
-		a = _mm_load_si128((__m128i*)p);
-		rmin = _mm_min_epu8(rmin, a);
-		rmax = _mm_max_epu8(rmax, a);
-		p += lx;
-	}
-	// 列間の最大・最小を求める
-	// 16データの最大・最小を８データに絞る
-	z    = _mm_setzero_si128();
-	a    = _mm_unpackhi_epi8(rmin, z);
-	b    = _mm_unpacklo_epi8(rmin, z);
-	rmin = _mm_min_epi16(a, b);
-	a    = _mm_unpackhi_epi8(rmax, z);
-	b    = _mm_unpacklo_epi8(rmax, z);
-	rmax = _mm_max_epi16(a, b);
-	// 8から4
-	a    = _mm_unpackhi_epi16(rmin, z);
-	b    = _mm_unpacklo_epi16(rmin, z);
-	rmin = _mm_min_epi16(a, b);
-	a    = _mm_unpackhi_epi16(rmax, z);
-	b    = _mm_unpacklo_epi16(rmax, z);
-	rmax = _mm_max_epi16(a, b);
-	// 4から2
-	a    = _mm_unpackhi_epi32(rmin, z);
-	b    = _mm_unpacklo_epi32(rmin, z);
-	rmin = _mm_min_epi16(a, b);
-	a    = _mm_unpackhi_epi32(rmax, z);
-	b    = _mm_unpacklo_epi32(rmax, z);
-	rmax = _mm_max_epi16(a, b);
-	// 2から1
-	a    = _mm_unpackhi_epi64(rmin, z);
-	b    = _mm_unpacklo_epi64(rmin, z);
-	rmin = _mm_min_epi16(a, b);
-	a    = _mm_unpackhi_epi64(rmax, z);
-	b    = _mm_unpacklo_epi64(rmax, z);
-	rmax = _mm_max_epi16(a, b);
-	// 結果取り出し
-	int val_min = _mm_extract_epi16(rmin, 0);
-	int val_max = _mm_extract_epi16(rmax, 0);
-
-	return val_max - val_min;
+#if defined(__x86_64__) || defined(__i386__)
+__m128i rmin,rmax,a,b,z;
+rmin=_mm_load_si128((__m128i*)p); rmax=_mm_load_si128((__m128i*)p); p+=lx;
+for(int i=1;i<block_height;i++){ a=_mm_load_si128((__m128i*)p); rmin=_mm_min_epu8(rmin,a); rmax=_mm_max_epu8(rmax,a); p+=lx; }
+z=_mm_setzero_si128();
+a=_mm_unpackhi_epi8(rmin,z); b=_mm_unpacklo_epi8(rmin,z); rmin=_mm_min_epi16(a,b);
+a=_mm_unpackhi_epi8(rmax,z); b=_mm_unpacklo_epi8(rmax,z); rmax=_mm_max_epi16(a,b);
+a=_mm_unpackhi_epi16(rmin,z); b=_mm_unpacklo_epi16(rmin,z); rmin=_mm_min_epi16(a,b);
+a=_mm_unpackhi_epi16(rmax,z); b=_mm_unpacklo_epi16(rmax,z); rmax=_mm_max_epi16(a,b);
+a=_mm_unpackhi_epi32(rmin,z); b=_mm_unpacklo_epi32(rmin,z); rmin=_mm_min_epi16(a,b);
+a=_mm_unpackhi_epi32(rmax,z); b=_mm_unpacklo_epi32(rmax,z); rmax=_mm_max_epi16(a,b);
+a=_mm_unpackhi_epi64(rmin,z); b=_mm_unpacklo_epi64(rmin,z); rmin=_mm_min_epi16(a,b);
+a=_mm_unpackhi_epi64(rmax,z); b=_mm_unpacklo_epi64(rmax,z); rmax=_mm_max_epi16(a,b);
+return _mm_extract_epi16(rmax,0)-_mm_extract_epi16(rmin,0);
+#else
+// ARM64向けスカラー実装
+int vmin=255, vmax=0;
+for(int i=0;i<block_height;i++){
+    for(int j=0;j<16;j++){ int v=(int)p[j]; if(v<vmin)vmin=v; if(v>vmax)vmax=v; }
+    p+=lx;
+}
+return vmax-vmin;
+#endif
 }
 
 //---------------------------------------------------------------------
@@ -841,33 +792,44 @@ int maxmin_block( unsigned char *p, int lx, int block_height )
 //---------------------------------------------------------------------
 int avgdist( int *avg, unsigned char *psrc, int lx, int block_height )
 {
-	__m128i a, b, r;
-	unsigned char *p;
-	int sum;
-	unsigned char d_avg;
-
-	// ループ２回で結果を取得
-	// １回目：平均値を取得
-	// ２回目：平均値からの絶対値差合計を取得
-
-	b = _mm_setzero_si128();				// 平均値取得用の比較値
-	for(int i=0; i<2; i++){
-		p = psrc;							// 取得フレーム開始位置
-		r = _mm_setzero_si128();			// 結果初期化
-		for(int j=0; j<block_height; j++){
-			a = _mm_loadu_si128((__m128i*)p);
-			r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
-			p += lx;
-		}
-		sum = _mm_extract_epi16(r, 0) + _mm_extract_epi16(r, 4);
-
-		// １回目の結果は２回目の比較対象値とする（平均値算出＋代入）
-		if (i == 0){
-			d_avg = (unsigned char) ((sum + (block_height * 16/2)) / (block_height * 16));
-			b = _mm_set1_epi8(d_avg);
-		}
-	}
-	*avg = d_avg;
-	return sum;
+#if defined(__x86_64__) || defined(__i386__)
+__m128i a, b, r;
+unsigned char *p;
+int sum;
+unsigned char d_avg;
+b = _mm_setzero_si128();
+for(int i=0;i<2;i++){
+    p = psrc;
+    r = _mm_setzero_si128();
+    for(int j=0;j<block_height;j++){
+        a = _mm_loadu_si128((__m128i*)p);
+        r = _mm_add_epi32(r, _mm_sad_epu8(a, b));
+        p += lx;
+    }
+    sum = _mm_extract_epi16(r,0) + _mm_extract_epi16(r,4);
+    if(i==0){
+        d_avg = (unsigned char)((sum+(block_height*16/2))/(block_height*16));
+        b = _mm_set1_epi8(d_avg);
+    }
+}
+*avg = d_avg;
+return sum;
+#else
+// ARM64向けスカラー実装：平均値からの絶対値差合計
+unsigned char *p;
+int sum = 0;
+unsigned char d_avg = 0;
+for(int i=0;i<2;i++){
+    p = psrc;
+    sum = 0;
+    for(int j=0;j<block_height;j++){
+        for(int k=0;k<16;k++) sum += abs((int)p[k]-(int)d_avg);
+        p += lx;
+    }
+    if(i==0) d_avg=(unsigned char)((sum+(block_height*16/2))/(block_height*16));
+}
+*avg = d_avg;
+return sum;
+#endif
 }
 
